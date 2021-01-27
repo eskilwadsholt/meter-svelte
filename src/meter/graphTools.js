@@ -1,10 +1,10 @@
 export class LinearScale {
-    domain(D) {
+    setDomain(D) {
         this._domain = D;
         this.createMaps();
         return this;
     }
-    range(R) {
+    setRange(R) {
         this._range = R;
         this.createMaps();
         return this;
