@@ -26,7 +26,7 @@
             .setRange([0, 0.5]),
     };
     const labels = { minor: x => x, major: x => x };
-    $: yPos = 75;
+    const yPos = 60;
     let axisLine, axisMajorTicks, axisMinorTicks, axisTinyTicks;
     let topMark, bottomMark, indicatorLine;
     let majorTexts = [], minorTexts = [];
@@ -50,11 +50,11 @@
         scales.x
             .setDomain([xlims.xmin, xlims.xmax])
             .setRange([20, width - 20]);
-        topMark = `${width / 2 - 10} 10 ${width / 2 + 10}`
-                    + ` 10 ${width / 2} 20`;
-        bottomMark = `${width / 2 - 10} ${yPos + 25} ${width / 2 + 10}` 
-                       + ` ${yPos + 25} ${width / 2} ${yPos + 15}`;
-        indicatorLine = `M ${width / 2} 10 L ${width / 2} ${yPos + 25}`;
+        topMark = `${width / 2 - 10} 5 ${width / 2 + 10}`
+                    + ` 5 ${width / 2} 15`;
+        bottomMark = `${width / 2 - 10} ${yPos + 20} ${width / 2 + 10}` 
+                       + ` ${yPos + 20} ${width / 2} ${yPos + 10}`;
+        indicatorLine = `M ${width / 2} 5 L ${width / 2} ${yPos + 20}`;
         axisLine = `M ${scales.x.map(xmin)} ${yPos} L ${scales.x.map(xmax)} ${yPos}`;
         minorTexts = [];
         majorTexts = [];
@@ -117,6 +117,10 @@
         lastTouch = { ...newTouch };
         window.zoom = clamp(window.zoom * Math.pow(2, 0.03 * dy), zoomMin, zoomMax);
     }
+    function handleTouchend(e) {
+        e.preventDefault();
+        window.mid = Math.round(window.mid * 10) / 10;
+    }
     function clamp(val, min, max) {
         if (val < min) return min;
         if (val > max) return max;
@@ -124,46 +128,90 @@
     }
 </script>
 
-<div class="meter" bind:clientWidth={width} bind:clientHeight={height}
-    on:touchstart={handleTouchstart}
-    on:touchmove={handleTouchmove}>
-    <div class="info">
-        This is a meter
+<div class="flex-container">
+    <div class="value">{window.mid.toFixed(1)}</div>
+    <div class="meter" bind:clientWidth={width} bind:clientHeight={height}
+        on:touchstart={handleTouchstart}
+        on:touchmove={handleTouchmove}
+        on:touchend={handleTouchend}>
+        <svg>
+            <path class="indicator" d={indicatorLine}></path>
+            <polygon points={topMark}></polygon>
+            <polygon points={bottomMark}></polygon>
+            <g class="axes">
+                <path class="tiny-ticks" 
+                    style={`stroke-width:${tinyScales.thickness.map(window.zoom)}`} 
+                    d={axisTinyTicks}></path>
+                <path class="minor-ticks"
+                    style={`stroke-width:${scales.minorThickness.map(window.zoom)}`} 
+                    d={axisMinorTicks}></path>
+                <path d={axisMajorTicks}></path>
+                <path d={axisLine}></path>
+            </g>
+            <g class="labels">
+                {#each majorTexts as T}
+                    <text class="major" x={T.x} y={T.y}>{T.label}</text>
+                {/each}
+                {#each minorTexts as T}
+                    <text class="minor"
+                        style={`font-size:${scales.minorFont.map(window.zoom)}em`} 
+                        x={T.x} y={T.y}>{T.label}</text>
+                {/each}
+            </g>
+        </svg>
+        <div class="zoom-picto">
+            <div class="zoom-direction">
+                &#8593;
+                <div class="zoom-plus">&plus;</div>
+            </div>
+            <div class="zoom-symbol">
+                &#9906;
+            </div>
+            <div class="zoom-direction">
+                <div class="zoom-minus">&minus;</div>
+                &#8595;
+            </div>
+        </div>
     </div>
-    <svg>
-        <rect y=12 {width} height={yPos + 10} fill="#2228"></rect>
-        <path class="indicator" d={indicatorLine}></path>
-        <polygon points={topMark}></polygon>
-        <polygon points={bottomMark}></polygon>
-        <g class="axes">
-            <path class="tiny-ticks" 
-                style={`stroke-width:${tinyScales.thickness.map(window.zoom)}`} 
-                d={axisTinyTicks}></path>
-            <path class="minor-ticks"
-                style={`stroke-width:${scales.minorThickness.map(window.zoom)}`} 
-                d={axisMinorTicks}></path>
-            <path d={axisMajorTicks}></path>
-            <path d={axisLine}></path>
-        </g>
-        <g class="labels">
-            {#each majorTexts as T}
-                <text class="major" x={T.x} y={T.y}>{T.label}</text>
-            {/each}
-            {#each minorTexts as T}
-                <text class="minor"
-                    style={`font-size:${scales.minorFont.map(window.zoom)}em`} 
-                    x={T.x} y={T.y}>{T.label}</text>
-            {/each}
-        </g>
-    </svg>
 </div>
 
 <style>
-    .info {
+    .zoom-direction {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .zoom-plus, .zoom-minus {
+        font-size: 0.5em;
+        margin: -0.5em;
+    }
+    .zoom-picto {
         position: absolute;
-        top: 10px;
-        left: 10px;
-        color: #888;
+        color: gray;
+        font-size: 2.5em;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    .zoom-symbol {
+        -webkit-transform: rotate(45deg); 
+           -moz-transform: rotate(45deg); 
+             -o-transform: rotate(45deg);
+                transform: rotate(45deg);
+    }
+    .value {
+        font-size: 4em;
+        color: whitesmoke;
+        padding: 20px;
+    }
+    .flex-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
     }
     .meter {
         position: relative;
@@ -183,7 +231,7 @@
         stroke: rgba(252, 0, 0, 0.7);
     }
     text.major {
-        fill: blue;
+        fill: red;
         text-anchor: middle;
         font-size: 1em;
     }

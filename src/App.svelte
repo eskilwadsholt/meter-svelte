@@ -15,14 +15,14 @@ import Meter from "./meter/Meter.svelte";
 
 <style>
 	.meter-container {
-		height: 50%;
+		height: 80%;
 	}
 	#root {
 		display: flex;
 		flex-direction: column;
 		width: 100%;
 		height: 100%;
-		justify-content: space-around;
+		justify-content: center;
 		align-items: center;
 	}
 	main {
@@ -35,7 +35,7 @@ import Meter from "./meter/Meter.svelte";
 		background: #1C1C1C;
 		display: flex;
 		flex-direction: column;
-		justify-content: space-evenly;
+		justify-content: flex-start;
 		position: fixed;
 	}
 </style>
